@@ -124,7 +124,7 @@ def recommend(user_input, model, ratings_df, user_df, anime_emb, anime_sel, new_
             
             similar_names = []
             
-            for name in anime_selected['Name'].values:
+            for name in anime_sel['Name'].values:
                 score = jaro.jaro_winkler_metric(a_name, name)
                 if score > 0.9:
                     similar_names.append((name, score))
