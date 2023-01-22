@@ -130,7 +130,8 @@ def recommend(user_input, model, ratings_df, user_df, anime_emb, anime_sel, new_
                     similar_names.append((name, score))
             if len(similar_names) == 0:
                 logger.debug('Anime not found in our database! Please check back later')
-                return None, 'Anime not found in our database! Please check back later'
+                anime_search = pd.DataFrame.from_dict({'result': ['Anime not found in our database! Please check back later']})
+                return None, anime_search
             else:
                 similar_names.sort(key = lambda x: x[1], reverse = True)
                 a_name = similar_names[0][0]
