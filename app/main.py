@@ -45,4 +45,4 @@ async def get_recommendations(rec: Recommend):
     except Exception as ex:
         logger.error(f'Error getting recommendations in main.py: {ex}')
 
-    return Recommend
+    return rec
