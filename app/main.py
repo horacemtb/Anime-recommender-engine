@@ -40,7 +40,7 @@ async def get_recommendations(rec: Recommend):
         except:
             rec.watched = None
 
-        rec.recommendations = json.dumps(res.to_dict())
+        rec.recommendations = json.dumps(recs.to_dict())
         
     except Exception as ex:
         logger.error(f'Error getting recommendations in main.py: {ex}')
