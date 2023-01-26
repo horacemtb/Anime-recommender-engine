@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rec-sys-service
+  labels:
+    app-label: rec-sys-app-label
+  namespace: rec-sys-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app-label: rec-sys-app-label
+  template:
+    metadata:
+      labels:
+        app-label: rec-sys-app-label
+    spec:
+      containers:
+      - name: rec-sys-app
+        image: horacehub/rec-sys-app:latest
+        ports:
+        - containerPort: 80
+        imagePullPolicy: Always
+
+
