@@ -1,10 +1,10 @@
-This anime recommender engine aka My Otaku Friend uses a hybrid ML model and complex DevOps infrastructure to give you recommendations based on the anime you like or have already watched and rated, or your genre preferences. This short doc is meant to give you an idea of its basic modules and ways to use it.
+This anime recommender engine aka My Otaku Friend uses a hybrid ML model and complex DevOps infrastructure to give you recommendations based on the anime you like or have already watched and rated, or your genre preferences. This concise doc is meant to give you an idea of its basic modules and ways of using.
 
 ## Installation
 
-You can either run the service locally using Docker or deploy it on your own Kubernetes cluster and send API requests via the web UI I've provided.
+You can either run the service locally using Docker or deploy it on your own Kubernetes cluster and send API requests.
 
-To run locally, you would need to install docker first:
+To run locally, you would need to install Docker first:
 
 ```
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -65,19 +65,19 @@ When the service is running, you can use the post method of the Python requests 
 
 This is a brief explanation of the ML stack used by the service to give you high-quality recommendations. The system consists of the following components:
 
-- Pre-trained LightFM product embeddings using a hybrid approach (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/baseline-light-FM-with-cross-val-and-hyperparam-tuning-50e.ipynb)
-- Bert embeddings of product descriptions (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/anime-synopsis-prep-bert-emb.ipynb)
+- Pre-trained LightFM item embeddings using a hybrid approach (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/baseline-light-FM-with-cross-val-and-hyperparam-tuning-50e.ipynb)
+- Bert embeddings of item descriptions (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/anime-synopsis-prep-bert-emb.ipynb)
 - User features based on user preferences
-- LightGBM regressor for product ranking (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/lightgbm-regression-with-lightfm-emb-50e%2Bbert-features.ipynb)
+- LightGBM regressor for item ranking (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/lightgbm-regression-with-lightfm-emb-50e%2Bbert-features.ipynb)
 - Cosine similarity for final selection (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/predict.ipynb)
 
-The first step is to generate anime embeddings based on user and item features. The user features are made from data containing user preferences and mean rating:
+The first step is to generate anime embeddings based on user and item features. The user features are made from data containing their preferences and mean rating:
 
 ![image](https://user-images.githubusercontent.com/46810665/216382008-2c4b3f40-e507-4f7a-be64-d68e23078467.png)
 
 There a total of 45 user features.
 
-The item features are made from data containing rich information about the anime, such as average score, type, number of episodes, genres, number of ratings, etc.:
+The item features are made from data containing a lot of information about the anime, such as average score, type, number of episodes, genres, number of ratings, etc.:
 
 ![image](https://user-images.githubusercontent.com/46810665/216382493-4584ea0a-83e7-4962-af6d-69fa40ce4f76.png)
 
@@ -104,7 +104,7 @@ with 2435913 stored elements in COOrdinate format>
 ```
 13102 unique users x 14353 unique anime.
 
-The dataset is split into train and test data with 0.8:0.2 proportion. The model is trained for 50 epochs with the following params: no_components = 64, loss = "warp", k = 15. The resulting metrics on the test set are: test precision@k: 0.13045670092105865, test recall@k10: 0.09071833029967415. 
+The dataset is split into train and test data with 0.2 proportion. The model is trained for 50 epochs with the following params: no_components = 64, loss = "warp", k = 15. The resulting metrics on the test set are: test precision@k: 0.13045670092105865, test recall@k10: 0.09071833029967415. 
 
 ![image](https://user-images.githubusercontent.com/46810665/216387967-fddbb2cb-919a-43e3-80f3-463f47d21885.png)
 
@@ -139,12 +139,12 @@ This approach is used to estimate the performance of the algorithm on the test s
 Okay, but what shall we do with a new user not found in our database? This depends on whether the user has specified their preferences or not.
 If not, the recommedation algorithm works the same as in the case with a user's watch history containing only the anime ranked below 7. If a dictionary with user's preferences is provided, the algorithms selects the anime of those genres that fall into the user's preferences. After that, the LightGBM regressor is applied to select and rank the top 10 recommendations.
 
-The final implementation of the recommender engine includes anime similarity search in case the user provided a string with the name of the anime they want to see more of. This algorithm works based on cosine similarity between anime embeddings. The Jaro-Winkler method is applied to correct possible typos. 
+The final implementation of the recommender engine also includes anime similarity search in case the user has provided a string with the name of the anime they like. This algorithm works based on cosine similarity between anime embeddings. The Jaro-Winkler method is applied to correct possible typos. 
 
 ## Modules
 
 The application module is located in the app folder. The ML stack is implemented in the predict.py script: https://github.com/horacemtb/Anime-recommender-engine/blob/main/app/predict.py
-The data and models folder contain the files with embeddings and user data and a LightGBM regressor model respectively.
+The data and models folder contain the files with embeddings plus user data and a LightGBM regressor model respectively.
 
 The web-ui folder contains a script to launch a simple streamlit-based web UI. When deployed on a Kubernetes cluster, you can specify the IP address in the code to send requests to the server via API. Below are a few sample screens.
 
@@ -166,7 +166,41 @@ The type of request is selected via the Navigation menu:
 
 The simulate-new-users folder contains .py and sh. scripts to simulate arrival of new users on a daily basis and write the data to PostgreSQL database. The process is automated using Airflow: https://github.com/horacemtb/Anime-recommender-engine/blob/main/airflow-dags/add_new_users.py
 
-The retrain-model contains .py and sh. scripts to retrain a LightGBM regressor model on a weekly basis, considering that new users arrive daily. All the artifacts, including updated user data files and the pickled model, are logged via mlflow and saved to s3 storage. A t-test is performed to determine a possible statistically significant diffetence in the MAE metric on the test set. 
+The retrain-model contains .py and sh. scripts to retrain a LightGBM regressor model on a weekly basis, considering that new users arrive daily. All the artifacts, including updated user data files and the pickled model, are logged via mlflow and saved to s3 storage. A t-test is performed to determine a possible statistically significant difference in the MAE metric on the test set. If there's no difference, the current prod model is overwritten with the new model and served to the Production stage via mlflow because it now knows more users. If the performances demonstrated by the two models are different and the new model performs better, it is also served to the Production stage. If the performances demonstrated by the two models are different and the new model performs worse, the current prod model is kept. After that an engineer can push the updated data and model to the GitHub repo and make a new release. Then they can restart the deployment on Kubernetes for the new image to be pulled and applied. The process is automated using Airflow: https://github.com/horacemtb/Anime-recommender-engine/blob/main/airflow-dags/retrain-model.py
 
+## Infrastructure
 
+This project makes an active use of Yandex Cloud services. The following infrastructure stack is used:
 
+- Airflow to automate the simulate-new-users and retrain-model pipelines:
+
+![image](https://user-images.githubusercontent.com/46810665/216408917-56d00a68-686f-4d80-8908-40dcd155548e.png)
+
+- PostgreSQL database to store user data:
+
+![image](https://user-images.githubusercontent.com/46810665/216409671-1f160e85-fe01-4828-8928-013268523843.png)
+
+- s3 storage to store anime data and log mlflow artifacts:
+
+![image](https://user-images.githubusercontent.com/46810665/216410218-22f4ad0b-1f76-482f-a8ba-f040094ca66e.png)
+
+- mlflow to log the results of the retrain-model pipeline:
+
+![image](https://user-images.githubusercontent.com/46810665/216411871-a3f05558-4e5f-4810-b782-084a447512cb.png)
+
+- Docker to serve the app as a container:
+
+https://github.com/horacemtb/Anime-recommender-engine/blob/main/Dockerfile
+
+- GitHub CI/CD pipeline to build a Docker image and push it to Dockerhub:
+
+https://github.com/horacemtb/Anime-recommender-engine/blob/main/.github/workflows/docker-image.yml
+
+- Kubernetes to deploy the My Otaku Friend service:
+
+![image](https://user-images.githubusercontent.com/46810665/216413632-1cb17b2b-fbd0-4600-95cc-ab582293dd7a.png)
+
+- Prometheus and Grafana stack to monitor the service, including a system of alerts:
+
+![compute-resources-pod-monitoring-1](https://user-images.githubusercontent.com/46810665/216418091-0262f846-c5cc-4385-8758-9c311d67c6e5.png)
+![compute-resources-pod-monitoring-3](https://user-images.githubusercontent.com/46810665/216418209-c2bda450-a221-439a-9c1b-109fa9343795.png)
