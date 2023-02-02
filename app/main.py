@@ -1,16 +1,19 @@
 import json
 from loguru import logger
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import pickle
 
 import pandas as pd
 
 from app.class_Recommend import Recommend
 from app.predict import recommend
+from starlette_exporter import PrometheusMiddleware, handle_metrics
 
 logger.debug('Running app')
 
 app = FastAPI()
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", handle_metrics)
 
 logger.debug('Loading data')
 anime_selected = pd.read_csv('./app/data/anime_selected.csv')
@@ -44,5 +47,6 @@ async def get_recommendations(rec: Recommend):
         
     except Exception as ex:
         logger.error(f'Error getting recommendations in main.py: {ex}')
+        raise HTTPException(status_code = 400, detail = str(ex))
 
     return rec
