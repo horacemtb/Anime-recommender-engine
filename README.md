@@ -61,7 +61,7 @@ When the service is running, you can use the post method of the Python requests 
 - Sample request for a specific anime:
 <img width="756" alt="r4" src="https://user-images.githubusercontent.com/46810665/216379243-9cecee18-fd9e-4787-ae54-06ccda67e83d.png">
 
-## Technology
+## Machine Learning Technology
 
 This is a brief explanation of the ML stack used by the service to give you high-quality recommendations. The system consists of the following components:
 
@@ -69,7 +69,7 @@ This is a brief explanation of the ML stack used by the service to give you high
 - Bert embeddings of product descriptions (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/anime-synopsis-prep-bert-emb.ipynb)
 - User features based on user preferences
 - LightGBM regressor for product ranking (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/lightgbm-regression-with-lightfm-emb-50e%2Bbert-features.ipynb)
-- Cosine similarity for final selection 
+- Cosine similarity for final selection (https://github.com/horacemtb/Anime-recommender-engine/blob/main/research/predict.ipynb)
 
 The first step is to generate anime embeddings based on user and item features. The user features are made from data containing user preferences and mean rating:
 
@@ -123,17 +123,50 @@ The final recommendations for a single existing user are generated using the fol
 1. The user's rating is predicted for each of the 14353 anime. 
 2. The LightGBM regressor is applied to rank the predictions, of which top 1000 are selected.
 
-If the user's watch history has any anime rated 7 or higher: 
-3.1. All the anime with the highest rating are selected from the watch history.
-4.1. A mean embedding of the user's top rated anime is generated based on LightFM and BERT embeddings to represent the user's ideal preference.
-5.1. Cosine similarity is used to find the top 10 similar anime among the rest of the anime.
-6.1 The selected top 10 anime are ranked based on the predicted LightGBM ratings.
+If the user's watch history has any anime rated 7 or higher:
+
+3. All the anime with the highest rating are selected from the watch history.
+4. A mean embedding of the user's top rated anime is generated based on LightFM and BERT embeddings to represent the user's ideal preference.
+5. Cosine similarity is used to find the top 10 similar anime among the rest of the anime.
+6. The selected top 10 anime are ranked based on the predicted LightGBM ratings.
 
 If the user's watch history has anime with ratings lower than 7, i.e. the user didn't like anything they've watched:
-3.1. The top 10 anime are selected and ranked based on the LightGBM predicted ratings exclusively.
+
+3. The top 10 anime are selected and ranked based on the LightGBM predicted ratings exclusively.
 
 This approach is used to estimate the performance of the algorithm on the test set, i.e. the 2621 unique user ids mentioned above. The resulting metrics are as follows: precision@10 is 0.4449, recall@10 is 0.1856, which I personally consider a solid score. 
 
-Okay, but what shall we do with a new user not found in our database?
+Okay, but what shall we do with a new user not found in our database? This depends on whether the user has specified their preferences or not.
+If not, the recommedation algorithm works the same as in the case with a user's watch history containing only the anime ranked below 7. If a dictionary with user's preferences is provided, the algorithms selects the anime of those genres that fall into the user's preferences. After that, the LightGBM regressor is applied to select and rank the top 10 recommendations.
+
+The final implementation of the recommender engine includes anime similarity search in case the user provided a string with the name of the anime they want to see more of. This algorithm works based on cosine similarity between anime embeddings. The Jaro-Winkler method is applied to correct possible typos. 
+
+## Modules
+
+The application module is located in the app folder. The ML stack is implemented in the predict.py script: https://github.com/horacemtb/Anime-recommender-engine/blob/main/app/predict.py
+The data and models folder contain the files with embeddings and user data and a LightGBM regressor model respectively.
+
+The web-ui folder contains a script to launch a simple streamlit-based web UI. When deployed on a Kubernetes cluster, you can specify the IP address in the code to send requests to the server via API. Below are a few sample screens.
+
+The type of request is selected via the Navigation menu:
+
+![image](https://user-images.githubusercontent.com/46810665/216402142-eb93cc7f-c577-4178-92ec-d56ed714e0a1.png)
+
+- Recommend anime for an existing user or new user without preferences:
+
+![image](https://user-images.githubusercontent.com/46810665/216402320-047254d3-0d8f-4e5d-849d-7dc84b7edeee.png)
+
+- Recommend anime for a new user with preferences: 
+
+![image](https://user-images.githubusercontent.com/46810665/216402551-923a0dc8-ba30-4789-8e4e-d2c5be24caab.png)
+
+- Recommend similar anime:
+
+![image](https://user-images.githubusercontent.com/46810665/216402683-987c880b-8690-43f0-983f-aca76e80b26e.png)
+
+The simulate-new-users folder contains .py and sh. scripts to simulate arrival of new users on a daily basis and write the data to PostgreSQL database. The process is automated using Airflow: https://github.com/horacemtb/Anime-recommender-engine/blob/main/airflow-dags/add_new_users.py
+
+The retrain-model contains .py and sh. scripts to retrain a LightGBM regressor model on a weekly basis, considering that new users arrive daily. All the artifacts, including updated user data files and the pickled model, are logged via mlflow and saved to s3 storage. A t-test is performed to determine a possible statistically significant diffetence in the MAE metric on the test set. 
+
 
 
