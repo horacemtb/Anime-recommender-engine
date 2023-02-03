@@ -170,7 +170,11 @@ The retrain-model contains .py and sh. scripts to retrain a LightGBM regressor m
 
 ## Infrastructure
 
-This project makes an active use of Yandex Cloud services. The following infrastructure stack is used:
+This project makes an active use of Yandex Cloud services. Below is the architecture scheme.
+
+![anime-rec-sys-architecture](https://user-images.githubusercontent.com/46810665/216624039-2ebe3a58-fe26-4ee7-8479-6a1fecddb26a.png)
+
+The following infrastructure stack is used:
 
 - Airflow to automate the simulate-new-users and retrain-model pipelines:
 
