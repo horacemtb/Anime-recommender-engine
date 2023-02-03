@@ -7,9 +7,10 @@ metadata:
     app-label: rec-sys-app-label
 spec:
   ports:
-    - port: 80
-      name: http
+    - name: animeserviceport
+      port: 80
       targetPort: 80
+      protocol: TCP
   selector:
     app-label: rec-sys-app-label
   type: LoadBalancer

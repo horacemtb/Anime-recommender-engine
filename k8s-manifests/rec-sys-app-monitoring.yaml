@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  namespace: default
+  labels:
+    release: prometheus
+  name: anime-recommender
+spec:
+  endpoints:
+
+  - path: /metrics
+    port: animeserviceport
+    scheme: http
+    interval: 60s
+
+  jobLabel: anime-recommender
+  namespaceSelector:
+    matchNames:
+    - rec-sys-namespace
+  selector:
+    matchLabels:
+      app-label: rec-sys-app-label
